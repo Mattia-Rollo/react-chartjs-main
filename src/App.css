@@ -21,7 +21,8 @@
 
 .revenueCard {
   width: 92%;
-  height: 20rem;
+  height: 30rem;
+  position: relative;
 }
 
 .customerCard {
@@ -32,4 +33,10 @@
 .categoryCard {
   width: 40%;
   height: 20rem;
+}
+
+.resetButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
 }
