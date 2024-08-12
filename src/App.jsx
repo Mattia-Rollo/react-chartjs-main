@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
-import { Chart as ChartJS, defaults } from "chart.js/auto";
+import React, { useRef, useCallback } from "react";
+import { Chart as ChartJS, defaults } from "chart.js/auto"; // import all chart.js modules and plugins
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import zoomPlugin from "chartjs-plugin-zoom";
 
@@ -24,6 +24,25 @@ defaults.plugins.title.color = "black";
 
 export const App = () => {
   const chartRef = useRef(null);
+
+  const handleZoom = useCallback((chart) => {
+    const { chart: zoomedChart } = chart;
+    const { min: xMin, max: xMax } = zoomedChart.scales.x;
+    const { min: yMin, max: yMax } = zoomedChart.scales.y;
+
+    console.log("Zoom applicato:");
+    console.log(`Asse X: da ${xMin} a ${xMax}`);
+    console.log(`Asse Y: da ${yMin} a ${yMax}`);
+
+    const labels = zoomedChart.data.labels;
+    const startIndex = Math.max(0, Math.floor(xMin));
+    const endIndex = Math.min(labels.length - 1, Math.ceil(xMax));
+
+    const startLabel = labels[startIndex];
+    const endLabel = labels[endIndex];
+
+    console.log(`Periodo: da ${startLabel} a ${endLabel}`);
+  }, []);
 
   const resetZoom = () => {
     if (chartRef && chartRef.current) {
@@ -84,6 +103,7 @@ export const App = () => {
                     borderWidth: 0.2,
                     // threshold: 10,
                   },
+                  onZoom: handleZoom,
                 },
               },
             },
