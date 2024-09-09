@@ -2,11 +2,13 @@ import React, { useRef, useCallback } from "react";
 import { Chart as ChartJS, defaults } from "chart.js/auto"; // import all chart.js modules and plugins
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import zoomPlugin from "chartjs-plugin-zoom";
+import FlightDataChart from "./components/FlightDataChart";
 
 import "./App.css";
 
 import revenueData from "./data/revenueData.json";
 import sourceData from "./data/sourceData.json";
+
 
 console.log("zoomPlugin:", zoomPlugin);
 
@@ -167,6 +169,10 @@ export const App = () => {
             },
           }}
         />
+      </div>
+
+      <div className="dataCard revenueCard">
+        <FlightDataChart />
       </div>
     </div>
   );
