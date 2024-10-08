@@ -10,11 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^6.1.2",
+    "@mui/styled-engine-sc": "^6.1.2",
     "chart.js": "^4.4.0",
     "chartjs-plugin-zoom": "^2.0.1",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "styled-components": "^6.1.13"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

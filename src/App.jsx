@@ -3,6 +3,7 @@ import { Chart as ChartJS, defaults } from "chart.js/auto"; // import all chart.
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import zoomPlugin from "chartjs-plugin-zoom";
 import FlightDataChart from "./components/FlightDataChart";
+import FlyingHelicopter from "./components/HelicopterAnimation";
 
 import "./App.css";
 
@@ -53,6 +54,7 @@ export const App = () => {
   };
   return (
     <div className="App">
+      <FlyingHelicopter />
       <div className="dataCard revenueCard">
         <div className="resetButton">
           <button onClick={resetZoom}>Reset Zoom</button>
