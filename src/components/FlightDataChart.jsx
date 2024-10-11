@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from "react";
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import zoomPlugin from "chartjs-plugin-zoom";
 
 ChartJS.register(
   CategoryScale,
@@ -18,11 +19,13 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  zoomPlugin
 );
 
 const FlightDataChart = () => {
   const [xAxis, setXAxis] = useState('timestamp');
+  const chartRef = useRef(null);
 
   const data = [
     { id: 1, flightHours: 0, s1r: 20, s1r_avg: 2, timestamp: new Date('2023-07-25T06:00:00'), valid: false, farAndClose: "far" },
@@ -56,6 +59,31 @@ const FlightDataChart = () => {
     ],
   };
 
+  const handleZoom = useCallback((chart) => {
+    const { chart: zoomedChart } = chart;
+    const { min: xMin, max: xMax } = zoomedChart.scales.x;
+    const { min: yMin, max: yMax } = zoomedChart.scales.y;
+
+    console.log("Zoom applicato:");
+    console.log(`Asse X: da ${xMin} a ${xMax}`);
+    console.log(`Asse Y: da ${yMin} a ${yMax}`);
+
+    const labels = zoomedChart.data.labels;
+    const startIndex = Math.max(0, Math.floor(xMin));
+    const endIndex = Math.min(labels.length - 1, Math.ceil(xMax));
+
+    const startLabel = labels[startIndex];
+    const endLabel = labels[endIndex];
+
+    console.log(`Periodo: da ${startLabel} a ${endLabel}`);
+  }, []);
+
+  const resetZoom = () => {
+    if (chartRef && chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  };
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -66,6 +94,26 @@ const FlightDataChart = () => {
       title: {
         display: true,
         text: 'Grafico S1R',
+      },
+      zoom: {
+        // limits: {
+        //   y: { min: "original", max: "original" },
+        // },
+        // pan: {
+        //   enabled: true,
+        //   mode: "xy",
+        // },
+        zoom: {
+          mode: "x",
+          drag: {
+            enabled: true,
+            backgroundColor: "rgba(255,122,90,0.3)",
+            borderColor: "rgba(90,90,90)",
+            borderWidth: 0.2,
+            // threshold: 10,
+          },
+          onZoom: handleZoom,
+        },
       },
     },
     scales: {
@@ -102,8 +150,11 @@ const FlightDataChart = () => {
         </select>
       </div>
       <div style={{ height: 'calc(100% - 40px)' }}>
-        <Line options={options} data={chartData} />
+        <Line ref={chartRef} options={options} data={chartData} />
       </div>
+      <div className="resetButton">
+          <button onClick={resetZoom}>Reset Zoom</button>
+        </div>
     </div>
   );
 };
