@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ExcelUploader from './ExcelUploader';
-import CSVUploader from './CsvUploader';
+import CSVUploader from './CSVUploader';
 import TransactionTable from './TransactionTable';
 import Grid from '@mui/material/Grid2';
 import GraficoSpeseSalario from './GraficoLineaSpeseSalario';
