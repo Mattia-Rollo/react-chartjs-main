@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "flightHours": 0,
+    "s1r": 20,
+    "s1r_avg": 2,
+    "timestamp": "2023-07-25T04:00:00.000Z",
+    "valid": false,
+    "farAndClose": "far"
+  },
+  {
+    "id": 2,
+    "flightHours": 35.3,
+    "s1r": 35,
+    "s1r_avg": 5,
+    "timestamp": "2023-07-25T05:30:00.000Z",
+    "valid": true,
+    "farAndClose": "far"
+  },
+  {
+    "id": 3,
+    "flightHours": 52,
+    "s1r": 2,
+    "s1r_avg": 10,
+    "timestamp": "2023-07-25T06:45:00.000Z",
+    "valid": true,
+    "farAndClose": "close"
+  },
+  {
+    "id": 4,
+    "flightHours": 83.2,
+    "s1r": 10,
+    "s1r_avg": 23,
+    "timestamp": "2023-07-25T07:55:00.000Z",
+    "valid": true,
+    "farAndClose": "far"
+  },
+  {
+    "id": 5,
+    "flightHours": 106.4,
+    "s1r": 40,
+    "s1r_avg": 1,
+    "timestamp": "2023-07-25T08:00:00.000Z",
+    "valid": true,
+    "farAndClose": "far"
+  },
+  {
+    "id": 6,
+    "flightHours": 145.4,
+    "s1r": 60,
+    "s1r_avg": 6,
+    "timestamp": "2023-07-25T09:10:00.000Z",
+    "valid": false,
+    "farAndClose": "far"
+  },
+  {
+    "id": 7,
+    "flightHours": 178.4,
+    "s1r": 89,
+    "s1r_avg": 12,
+    "timestamp": "2023-07-25T10:20:00.000Z",
+    "valid": false,
+    "farAndClose": "far"
+  },
+  {
+    "id": 8,
+    "flightHours": 213.7,
+    "s1r": 56,
+    "s1r_avg": 21,
+    "timestamp": "2023-07-25T11:30:00.000Z",
+    "valid": true,
+    "farAndClose": "far"
+  },
+  {
+    "id": 9,
+    "flightHours": 230.4,
+    "s1r": 5,
+    "s1r_avg": 8,
+    "timestamp": "2023-07-25T12:40:00.000Z",
+    "valid": true,
+    "farAndClose": "close"
+  },
+  {
+    "id": 10,
+    "flightHours": 261.6,
+    "s1r": 13,
+    "s1r_avg": 34,
+    "timestamp": "2023-07-25T13:50:00.000Z",
+    "valid": true,
+    "farAndClose": "far"
+  },
+  {
+    "id": 11,
+    "flightHours": 284.8,
+    "s1r": 5,
+    "s1r_avg": 40,
+    "timestamp": "2023-07-25T14:00:00.000Z",
+    "valid": true,
+    "farAndClose": "close"
+  },
+  {
+    "id": 12,
+    "flightHours": 300.8,
+    "s1r": -3,
+    "s1r_avg": 24,
+    "timestamp": "2023-07-25T15:10:00.000Z",
+    "valid": true,
+    "farAndClose": "close"
+  }
+]
