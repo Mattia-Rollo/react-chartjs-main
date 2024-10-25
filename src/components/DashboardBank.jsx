@@ -286,7 +286,8 @@ const SpeseMensiliDashboard = () => {
 
                 {/* grafico lineare */}
                 {datagraficeLineare.length > 0 && (
-                <GraficoSpeseSalario datagraficeLineare={datagraficeLineare} stipendio={stipendio}/>)}
+                <GraficoSpeseSalario datagraficeLineare={datagraficeLineare} stipendio={stipendio}/>
+                )}
 
                 {/* tabella transazioni */}
                 {transactions.length > 0 && (

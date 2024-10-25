@@ -6,6 +6,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import FlightDataChart from "./components/FlightDataChart";
 import FlyingHelicopter from "./components/HelicopterAnimation";
 import SpeseMensiliDashboard from "./components/DashboardBank";
+import TestPage from "./pages/TestPage";
 import { AppBar, Toolbar, Button, Container, Box } from '@mui/material';
 
 import "./App.css";
@@ -171,6 +172,7 @@ export const App = () => {
             <Button color="inherit" component={Link} to="/">Dashboard</Button>
             <Button color="inherit" component={Link} to="/flight-data">Flight Data</Button>
             <Button color="inherit" component={Link} to="/bank-dashboard">Bank Dashboard</Button>
+            <Button color="inherit" component={Link} to="/test-chart">TEST Chart</Button>
           </Toolbar>
         </AppBar>
 
@@ -179,6 +181,7 @@ export const App = () => {
             <Route path="/" element={<Dashboard chartRef={chartRef} handleZoom={handleZoom} resetZoom={resetZoom} />} />
             <Route path="/flight-data" element={<div className="dataCard revenueCard"><FlightDataChart /></div>} />
             <Route path="/bank-dashboard" element={<div className="bankCard dataCard"><SpeseMensiliDashboard /></div>} />
+            <Route path="/test-chart" element={<div className="test chart"><TestPage /></div>} />
           </Routes>
         </Container>
       </div>

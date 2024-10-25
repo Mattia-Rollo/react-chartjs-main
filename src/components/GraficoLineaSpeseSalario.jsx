@@ -99,7 +99,7 @@ const GraficoSpeseSalario = ({ datagraficeLineare,stipendio }) => {
                             dataKey="importo"
                             name="Spese"
                             stroke="#8884d8"
-                            activeDot={{ r: 8 }}
+                            // activeDot={{ r: 8 }}
                         />
                         <Line
                             yAxisId="right"
@@ -107,7 +107,7 @@ const GraficoSpeseSalario = ({ datagraficeLineare,stipendio }) => {
                             dataKey="stipendio"
                             name="Stipendio"
                             stroke="#82ca9d"
-                            activeDot={{ r: 8 }}
+                            // activeDot={{ r: 8 }}
                         />
                         <Brush dataKey="data" height={30} stroke="#8884d8" />
                     </LineChart>
