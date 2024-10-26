@@ -12,9 +12,14 @@ import {
     Brush
 } from 'recharts';
 
-const GraficoSpeseSalario = ({ datagraficeLineare,stipendio }) => {
+interface GraficoSpeseSalarioProps {
+    datagraficeLineare: Array<{ [key: string]: any }>;
+    stipendio: number;
+}
+
+const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ datagraficeLineare, stipendio }) => {
     const [stipendioIniziale] = useState(stipendio);
-    const [datiCompleti, setDatiCompleti] = useState([]);
+    const [datiCompleti, setDatiCompleti] = useState<Array<{ importo: number; stipendio: string }>>([]);
 
     useEffect(() => {
         console.log("Dati ricevuti:", datagraficeLineare);

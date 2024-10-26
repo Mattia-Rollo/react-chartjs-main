@@ -19,14 +19,9 @@ import { styled } from '@mui/material/styles';
 import ExcelUploader  from './ExcelUploader';
 import TransactionTable from './TransactionTable';
 import GraficoSpeseSalario from './GraficoLineaSpeseSalario';
+import { Transaction } from '../types';
 
-interface Transaction {
-    data: number;
-    operazione: string;
-    categoria: string;
-    importo: number;
-    dettagli?: string;
-}
+
 
 interface CategorieAggregate {
     [key: string]: number;

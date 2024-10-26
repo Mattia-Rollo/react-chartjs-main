@@ -1,17 +1,10 @@
 import { useState, ChangeEvent, FC } from 'react';
 import { Button, Typography, Box, CircularProgress } from '@mui/material';
 import * as XLSX from 'xlsx';
-
+import { Transaction } from '../types';
 
 interface ExcelUploaderProps {
   onDataExtracted: (data: Transaction[]) => void;
-}
-interface Transaction {
-  data: string;
-  operazione: string;
-  dettagli: string;
-  importo: number;
-  [key: string]: string | number; // per altre proprietà dinamiche
 }
 
 interface WorksheetCell {
@@ -83,7 +76,7 @@ const ExcelUploader: FC<ExcelUploaderProps> = ({ onDataExtracted }: ExcelUploade
           .filter((row: any[]) => row.some(cell => cell !== ''))
           .map((row: any[]) => {
             const transaction: Transaction = {
-              data: '',
+              data: 0,
               operazione: '',
               dettagli: '',
               importo: 0

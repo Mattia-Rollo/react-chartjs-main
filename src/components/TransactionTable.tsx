@@ -12,19 +12,13 @@ import {
   Box,
   Button
 } from '@mui/material';
+import { Transaction } from '../types';
 
 const excelNumberToDate = (excelNumber: number) => {
   const startDate = new Date(1900, 0, 1);
   const daysOffset = excelNumber - 2;
   const resultDate = new Date(startDate.setDate(startDate.getDate() + daysOffset));
   return resultDate;
-}
-
-interface Transaction {
-  operazione: string;
-  importo: number;
-  data: number;
-  [key: string]: string | number;
 }
 
 interface TransactionTableProps {
