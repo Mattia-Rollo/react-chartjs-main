@@ -4,13 +4,14 @@ export interface Transaction {
   data: number;
   [key: string]: string | number;
 }
-  
-  export interface DataGraficoLineare {
-    data: string;  // Cambiato da mese a data
-    spesa: number;
-  }
-  
-  export interface GraficoSpeseSalarioProps {
-    datagraficeLineare: DataGraficoLineare[];
-    stipendio: number;
-  }
+
+export interface DataGraficoLineare {
+  data: string; 
+  spesa: number;
+  [key: string]: string | number;
+}
+
+export interface GraficoSpeseSalarioProps {
+  dataGraficoLineare: DataGraficoLineare[];
+  stipendio: number;
+}

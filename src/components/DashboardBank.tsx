@@ -257,7 +257,7 @@ const SpeseMensiliDashboard = (): JSX.Element => {
 
                 {/* grafico lineare */}
                 {datagraficeLineare.length > 0 && (
-                <GraficoSpeseSalario datagraficeLineare={datagraficeLineare} stipendio={stipendio}/>
+                <GraficoSpeseSalario dataGraficoLineare={datagraficeLineare} stipendio={stipendio}/>
                 )}
 
                 {/* tabella transazioni */}

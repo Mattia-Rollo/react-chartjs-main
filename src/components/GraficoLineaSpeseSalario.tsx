@@ -11,30 +11,27 @@ import {
     Legend,
     Brush
 } from 'recharts';
+import { GraficoSpeseSalarioProps } from '../types';
 
-interface GraficoSpeseSalarioProps {
-    datagraficeLineare: Array<{ [key: string]: any }>;
-    stipendio: number;
-}
 
-const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ datagraficeLineare, stipendio }) => {
+const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ dataGraficoLineare, stipendio }) => {
     const [stipendioIniziale] = useState(stipendio);
     const [datiCompleti, setDatiCompleti] = useState<Array<{ importo: number; stipendio: string }>>([]);
 
     useEffect(() => {
-        console.log("Dati ricevuti:", datagraficeLineare);
+        console.log("Dati ricevuti:", dataGraficoLineare);
         
-        if (!Array.isArray(datagraficeLineare) || datagraficeLineare.length === 0) {
+        if (!Array.isArray(dataGraficoLineare) || dataGraficoLineare.length === 0) {
             console.log("I dati ricevuti non sono un array valido o sono vuoti");
             return;
         }
 
         // Analizziamo la struttura del primo elemento per capire come sono formattati i dati
-        const primoElemento = datagraficeLineare[0];
+        const primoElemento = dataGraficoLineare[0];
         console.log("Struttura del primo elemento:", primoElemento);
 
         let stipendioCorrente = stipendioIniziale;
-        const datiConStipendio = datagraficeLineare.map((item, index) => {
+        const datiConStipendio = dataGraficoLineare.map((item, index) => {
             let importo = 0;
             if (typeof item.importo === 'number') {
                 importo = item.importo;
@@ -64,7 +61,7 @@ const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ datagraficeLi
 
         console.log("Dati elaborati:", datiConStipendio);
         setDatiCompleti(datiConStipendio);
-    }, [datagraficeLineare, stipendioIniziale]);
+    }, [dataGraficoLineare, stipendioIniziale]);
 
     if (!Array.isArray(datiCompleti) || datiCompleti.length === 0) {
         return <Typography>Nessun dato disponibile per il grafico</Typography>;
