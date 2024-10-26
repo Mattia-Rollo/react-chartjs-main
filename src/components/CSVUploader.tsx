@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button, Typography, Box, CircularProgress } from '@mui/material';
+import { ChangeEvent } from 'react';
 
-const CSVUploader = ({ onDataExtracted }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+// Definizione dell'interfaccia per le props
+interface CSVUploaderProps {
+  onDataExtracted: (data: Record<string, any>[]) => void;
+}
 
-  const parseCSV = (text) => {
+// Definizione dell'interfaccia per i dati CSV
+interface CSVData {
+  [key: string]: string | number;
+}
+
+const CSVUploader: React.FC<CSVUploaderProps> = ({ onDataExtracted }) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const parseCSV = (text: string): CSVData[] => {
     const lines = text.split('\n');
     const headers = lines[0].split(',');
-    const data = [];
+    const data: CSVData[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       if (lines[i].trim() === '') continue;
       const values = lines[i].split(',');
-      const entry = {};
+      const entry: CSVData = {};
       for (let j = 0; j < headers.length; j++) {
-        let value = values[j];
+        let value: string | number = values[j];
         if (headers[j] === 'Importo') {
           value = parseFloat(value.replace('"', '').replace(',', '.'));
         }
@@ -27,16 +38,18 @@ const CSVUploader = ({ onDataExtracted }) => {
     return data;
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
     const reader = new FileReader();
 
     setIsLoading(true);
     setError(null);
 
-    reader.onload = (e) => {
+    reader.onload = (e: ProgressEvent<FileReader>) => {
       try {
-        const text = e.target.result;
+        const text = e.target?.result as string;
         const data = parseCSV(text);
         onDataExtracted(data);
       } catch (err) {
@@ -51,9 +64,7 @@ const CSVUploader = ({ onDataExtracted }) => {
       setIsLoading(false);
     };
 
-    if (file) {
-      reader.readAsText(file);
-    }
+    reader.readAsText(file);
   };
 
   return (

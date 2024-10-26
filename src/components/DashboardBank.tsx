@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, Brush } from 'recharts';
+import { useState } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import {
     Table,
     TableBody,
@@ -16,39 +16,35 @@ import {
     ThemeProvider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import ExcelUploader from './ExcelUploader';
-import CSVUploader from './CSVUploader';
+import ExcelUploader  from './ExcelUploader';
 import TransactionTable from './TransactionTable';
-import Grid from '@mui/material/Grid2';
 import GraficoSpeseSalario from './GraficoLineaSpeseSalario';
-import { set } from 'date-fns';
 
-const transazioni = [
-    { data: '17.10.2024', descrizione: 'Tigros', categoria: 'Altre uscite', importo: -13.89 },
-    { data: '16.10.2024', descrizione: 'Prelievo Sportello Banca Del Gruppo', categoria: 'Prelievi', importo: -40.00 },
-    { data: '16.10.2024', descrizione: 'Prelievo BANCOMAT Su Banche Del Gruppo', categoria: 'Prelievi', importo: -40.00 },
-    { data: '16.10.2024', descrizione: 'Esselunga Legcantoni P', categoria: 'Generi alimentari e supermercato', importo: -15.91 },
-    { data: '15.10.2024', descrizione: 'Pagamento Effettuato Su Pos Estero', categoria: 'Altre uscite', importo: -22.42 },
-    { data: '15.10.2024', descrizione: 'Google YouTube Member', categoria: 'Altre uscite', importo: -4.99 },
-    { data: '15.10.2024', descrizione: 'Addebito diretto disposto a favore di Save the Children Italia ETS MANDATO 11396578', categoria: 'Donazioni', importo: -30.00 },
-    { data: '14.10.2024', descrizione: 'Pagamento A2A SPA CS57V', categoria: 'Gas & energia elettrica', importo: -78.00 },
-    { data: '12.10.2024', descrizione: 'Iperstaroil Rescaldina', categoria: 'Carburanti', importo: -50.00 },
-    { data: '12.10.2024', descrizione: 'Ads Vallescrivia Ovest Arquata Scriv', categoria: 'Ristoranti e bar', importo: -24.93 },
-    { data: '12.10.2024', descrizione: 'Mcd Castelnuovo Scr.es Castelnuovo S', categoria: 'Ristoranti e bar', importo: -9.10 },
-    { data: '12.10.2024', descrizione: 'Aspit Genova Ovest Genova Aerop.', categoria: 'Pedaggi e Telepass', importo: -0.40 },
-    { data: '12.10.2024', descrizione: 'Miser Direz.entrata Terrazzano Ba', categoria: 'Pedaggi e Telepass', importo: -3.40 },
-    { data: '12.10.2024', descrizione: 'Miser Direz. Uscita Terrazzano Ba', categoria: 'Pedaggi e Telepass', importo: -3.40 },
-    { data: '12.10.2024', descrizione: 'Aspit Milano Ovest Genova Ovest', categoria: 'Pedaggi e Telepass', importo: -11.10 },
-    { data: '12.10.2024', descrizione: 'Miser Genova Aerop. Milano Ovest', categoria: 'Pedaggi e Telepass', importo: -11.20 },
-    { data: '11.10.2024', descrizione: 'Il Gusto Della Puglia Desio', categoria: 'Generi alimentari e supermercato', importo: -6.50 },
-    { data: '11.10.2024', descrizione: 'Il Gelato Di Peppy Snc Legnano', categoria: 'Generi alimentari e supermercato', importo: -8.00 },
-    { data: '11.10.2024', descrizione: 'Coop Legnano Legnano', categoria: 'Generi alimentari e supermercato', importo: -15.11 },
-    { data: '11.10.2024', descrizione: 'Prelievo Sportello Banca Del Gruppo', categoria: 'Prelievi', importo: -20.00 },
-    { data: '11.10.2024', descrizione: 'Ricarica Carta Prepagata', categoria: 'Ricarica carte', importo: -120.00 },
-    { data: '10.10.2024', descrizione: 'Stipendio O Pensione', categoria: 'Stipendi e pensioni', importo: 1907.00 }
-];
+interface Transaction {
+    data: number;
+    operazione: string;
+    categoria: string;
+    importo: number;
+    dettagli?: string;
+}
 
-const stipendio = 1607.00;
+interface CategorieAggregate {
+    [key: string]: number;
+}
+
+interface PieChartData {
+    name: string;
+    value: number;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        name: string;
+        value: number;
+    }>;
+    label?: string;
+}
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d88484'];
 
@@ -80,38 +76,30 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-const excelNumberToDate = (excelNumber) => {
-    console.log(excelNumber);
-    const startDate = new Date(1900, 0, 1); // Data di inizio (1 gennaio 1900)
-    const daysOffset = excelNumber - 2; // Offset dei giorni (perché 1 gennaio 1900 è 1 in Excel)
-    const resultDate = new Date(startDate.setDate(startDate.getDate() + daysOffset));
-    return resultDate;
-  }
+const excelNumberToDate = (excelNumber: number): Date => {
+    const startDate = new Date(1900, 0, 1);
+    const daysOffset = excelNumber - 2;
+    return new Date(startDate.setDate(startDate.getDate() + daysOffset));
+};
 
-const SpeseMensiliDashboard = () => {
-    const [speseFuture, setSpeseFuture] = useState(0);
-    const [nuovaSpesa, setNuovaSpesa] = useState('');
-    const [transactions, setTransactions] = useState([]);
-    const [stipendio, setStipendio] = useState(0);
+const SpeseMensiliDashboard = (): JSX.Element => {
+    const [speseFuture, setSpeseFuture] = useState<number>(0);
+    const [nuovaSpesa, setNuovaSpesa] = useState<string>('');
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [stipendio, setStipendio] = useState<number>(0);
 
-
-
-    const handleCSVExtractedData = (data) => {
-        console.log(data);
-        // Qui puoi aggiornare lo stato della tua applicazione con i dati estratti
-    };
-
-    const handleEXCELDataExtracted = (data) => {
-        console.log(data);
-        setStipendio(data.filter(item => item.operazione === 'Stipendio O Pensione')[0].importo);
+    const handleEXCELDataExtracted = (data: Transaction[]) => {
+        const stipendioTransaction = data.find(item => item.operazione === 'Stipendio O Pensione');
+        setStipendio(stipendioTransaction ? stipendioTransaction.importo : 0);
         setTransactions(data);
     };
 
-    const totaleSpese = transactions.reduce((sum, item) => item.importo < 0 ? sum + Math.abs(item.importo) : sum, 0);
+    const totaleSpese = transactions.reduce((sum, item) => 
+        item.importo < 0 ? sum + Math.abs(item.importo) : sum, 0);
     const totaleSpeseConFuture = totaleSpese + speseFuture;
     const rimanente = stipendio - totaleSpeseConFuture;
 
-    const handleAggiungiSpesa = () => {
+    const handleAggiungiSpesa = (): void => {
         const spesa = parseFloat(nuovaSpesa);
         if (!isNaN(spesa) && spesa > 0) {
             setSpeseFuture(prevSpese => prevSpese + spesa);
@@ -119,11 +107,11 @@ const SpeseMensiliDashboard = () => {
         }
     };
 
-    const resetSpeseFuture = () => {
+    const resetSpeseFuture = (): void => {
         setSpeseFuture(0);
     };
 
-    const categorieAggregate = transactions.reduce((acc, item) => {
+    const categorieAggregate: CategorieAggregate = transactions.reduce((acc: CategorieAggregate, item) => {
         if (item.importo < 0) {
             if (!acc[item.categoria]) {
                 acc[item.categoria] = 0;
@@ -133,25 +121,12 @@ const SpeseMensiliDashboard = () => {
         return acc;
     }, {});
 
-    const dataGrafico = Object.entries(categorieAggregate).map(([name, value]) => ({
+    const dataGrafico: PieChartData[] = Object.entries(categorieAggregate).map(([name, value]) => ({
         name,
         value
     }));
 
-    const RADIAN = Math.PI / 180;
-    // const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-    //     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    //     const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    //     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    //     return (
-    //         <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-    //             {`${(percent * 100).toFixed(0)}%`}
-    //         </text>
-    //     );
-    // };
-
-    const CustomTooltip = ({ active, payload, label }) => {
+    const CustomTooltip = ({ active, payload }: CustomTooltipProps): JSX.Element | null => {
         if (active && payload && payload.length) {
             return (
                 <div className="custom-tooltip" style={{ backgroundColor: '#fff', padding: '5px', border: '1px solid #ccc' }}>
@@ -163,14 +138,15 @@ const SpeseMensiliDashboard = () => {
     };
 
     const datagraficeLineare = transactions
-        .filter(item => item.importo < 0) // Filtriamo solo le spese (importi negativi)
-        .sort((a, b) => a.data - b.data) // Ordiniamo per data
+        .filter(item => item.importo < 0)
+        .sort((a, b) => a.data - b.data)
         .map(item => ({
             data: excelNumberToDate(item.data).toLocaleDateString(),
-            spesa: Math.abs(item.importo) // Convertiamo in valore positivo per il grafico
+            spesa: Math.abs(item.importo)
         }));
 
-
+    // Il resto del codice del render rimane sostanzialmente uguale
+    // Ho rimosso solo la parte commentata del renderCustomizedLabel
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ p: 2 }}>

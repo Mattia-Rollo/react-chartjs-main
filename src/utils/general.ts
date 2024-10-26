@@ -1,4 +1,7 @@
-function createJsonFile(data, filename = 'data.json') {
+
+
+
+function createJsonFile(data: [], filename = 'data.json') {
     // Converte la lista di oggetti in formato JSON
     const jsonData = JSON.stringify(data, null, 2);
 
@@ -18,5 +21,6 @@ function createJsonFile(data, filename = 'data.json') {
     document.body.removeChild(link);
   }
 
+  export default createJsonFile;
 
-  createJsonFile(data, 'data.json');
+// createJsonFile(data, 'data.json');

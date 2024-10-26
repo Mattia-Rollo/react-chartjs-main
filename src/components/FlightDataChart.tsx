@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, FC } from "react";
 import { Line } from 'react-chartjs-2';
 import { format } from "date-fns";
 import {
@@ -9,7 +9,7 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend,
+  // Legend,
 } from 'chart.js';
 import zoomPlugin from "chartjs-plugin-zoom";
 // import crosshairPlugin from 'chartjs-plugin-crosshair';
@@ -26,14 +26,15 @@ ChartJS.register(
   // crosshairPlugin,
 );
 
-const FlightDataChart = () => {
+
+const FlightDataChart: FC = () => {
   const [xAxis, setXAxis] = useState('timestamp');
-  const [zoomLimits, setZoomLimits] = useState({ xMin: null, xMax: null });
+  // const [zoomLimits, setZoomLimits] = useState({ xMin: null, xMax: null });
 
-  const chartRef1 = useRef(null);
-  const chartRef2 = useRef(null);
+  const chartRef1 = useRef<ChartJS<'line'> | null>(null);
+  const chartRef2 = useRef<ChartJS<'line'> | null>(null);
 
-  const handleZoom = useCallback((chart) => {
+  const handleZoom = useCallback((chart: { chart: ChartJS }) => {
     const { chart: zoomedChart } = chart;
     const { min: xMin, max: xMax } = zoomedChart.scales.x;
     const { min: yMin, max: yMax } = zoomedChart.scales.y;
@@ -54,6 +55,8 @@ const FlightDataChart = () => {
     console.log(`Asse Y: da ${yMin} a ${yMax}`);
 
     const labels = zoomedChart.data.labels;
+    if (!labels) return;
+
     const startIndex = Math.max(0, Math.floor(xMin));
     const endIndex = Math.min(labels.length - 1, Math.ceil(xMax));
 
@@ -63,7 +66,7 @@ const FlightDataChart = () => {
     console.log(`Periodo: da ${startLabel} a ${endLabel}`);
   }, []);
 
-  const handleXAxisChange = (e) => {
+  const handleXAxisChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setXAxis(e.target.value);
 
     // Dopo aver cambiato l'asse, applica i limiti di zoom salvati
@@ -73,7 +76,7 @@ const FlightDataChart = () => {
     // }
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date: string | Date) => {
     return format(new Date(date), 'dd/MM/yyyy HH:mm');
   };
 
@@ -81,12 +84,9 @@ const FlightDataChart = () => {
     if (chartRef1.current && chartRef2.current) {
       chartRef1.current.resetZoom();
       chartRef2.current.resetZoom();
-    } else if (chartRef1.current) {
+    } else if (chartRef1.current && chartRef2.current) {
       chartRef1.current.resetZoom();
       chartRef2.current.resetZoom();
-    } else if (chartRef2.current) {
-      chartRef2.current.resetZoom();
-      chartRef1.current.resetZoom();
     }
   };
 
@@ -102,63 +102,63 @@ const FlightDataChart = () => {
     ],
   };
 
-  const options1 = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Grafico S1R',
-      },
-      zoom: {
-        // limits: {
-        //   y: { min: "original", max: "original" },
-        // },
-        // pan: {
-        //   enabled: true,
-        //   mode: "xy",
-        // },
-        zoom: {
-          mode: "x",
-          drag: {
-            enabled: true,
-            backgroundColor: "rgba(255,122,90,0.3)",
-            borderColor: "rgba(90,90,90)",
-            borderWidth: 0.2,
-            // threshold: 10,
-          },
-          onZoom: handleZoom,
-        },
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: xAxis === 'timestamp' ? 'Data e Ora' : 'Ore di volo',
-        },
-        ticks: {
-          maxRotation: 0,
-          minRotation: 0
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'S1R',
-        },
-      },
-    },
-  };
+  // const options1 = {
+  //   responsive: true,
+  //   maintainAspectRatio: false,
+  //   plugins: {
+  //     legend: {
+  //       position: 'top',
+  //     },
+  //     title: {
+  //       display: true,
+  //       text: 'Grafico S1R',
+  //     },
+  //     zoom: {
+  //       // limits: {
+  //       //   y: { min: "original", max: "original" },
+  //       // },
+  //       // pan: {
+  //       //   enabled: true,
+  //       //   mode: "xy",
+  //       // },
+  //       zoom: {
+  //         mode: "x",
+  //         drag: {
+  //           enabled: true,
+  //           backgroundColor: "rgba(255,122,90,0.3)",
+  //           borderColor: "rgba(90,90,90)",
+  //           borderWidth: 0.2,
+  //           // threshold: 10,
+  //         },
+  //         onZoom: handleZoom,
+  //       },
+  //     },
+  //   },
+  //   scales: {
+  //     x: {
+  //       title: {
+  //         display: true,
+  //         text: xAxis === 'timestamp' ? 'Data e Ora' : 'Ore di volo',
+  //       },
+  //       ticks: {
+  //         maxRotation: 0,
+  //         minRotation: 0
+  //       },
+  //     },
+  //     y: {
+  //       title: {
+  //         display: true,
+  //         text: 'S1R',
+  //       },
+  //     },
+  //   },
+  // };
   const options2 = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
       },
       title: {
         display: true,
@@ -173,7 +173,7 @@ const FlightDataChart = () => {
         //   mode: "xy",
         // },
         zoom: {
-          mode: "x",
+          mode: 'x' as const,
           drag: {
             enabled: true,
             backgroundColor: "rgba(255,122,90,0.3)",

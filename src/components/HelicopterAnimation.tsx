@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, FC } from "react";
 import { Box, Typography } from "@mui/material";
 import { styled, keyframes } from "@mui/material/styles";
 
@@ -385,7 +385,7 @@ const ModalBackground = styled(Box)({
   zIndex: 9999,
 });
 
-const FlyingHelicopter = () => {
+const FlyingHelicopter: FC = (): JSX.Element | null => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {

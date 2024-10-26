@@ -1,5 +1,5 @@
 // import "./styles.css";
-import React, { Component } from "react";
+import { Component } from "react";
 import {
   LineChart,
   Line,
@@ -33,12 +33,14 @@ const initialData = [
   { name: 20, cost: 7, impression: 100 }
 ];
 
+type DataKey = 'cost' | 'impression';
+
 const getAxisYDomain = (
-  from,
-  to,
-  ref,
-  offset
-) => {
+  from: number,
+  to: number,
+  ref: DataKey,
+  offset: number
+): [number, number] => {
   const refData = initialData.slice(from - 1, to);
   let [bottom, top] = [refData[0][ref], refData[0][ref]];
 
@@ -63,8 +65,21 @@ const initialState = {
   animation: true
 };
 
-export default class App extends Component {
-  constructor(props) {
+interface AppState {
+  data: typeof initialData;
+  left: string | number;
+  right: string | number;
+  refAreaLeft: string | number;
+  refAreaRight: string | number;
+  top: string | number;
+  bottom: string | number;
+  top2: string | number;
+  bottom2: string | number;
+  animation: boolean;
+}
+
+export default class App extends Component<{}, AppState> {
+  constructor(props: any) {
     super(props);
     this.state = initialState;
   }
@@ -86,10 +101,10 @@ export default class App extends Component {
       [refAreaLeft, refAreaRight] = [refAreaRight, refAreaLeft];
 
     // yAxis domain
-    const [bottom, top] = getAxisYDomain(refAreaLeft, refAreaRight, "cost", 1);
+    const [bottom, top] = getAxisYDomain(Number(refAreaLeft), Number(refAreaRight), "cost", 1);
     const [bottom2, top2] = getAxisYDomain(
-      refAreaLeft,
-      refAreaRight,
+      Number(refAreaLeft),
+      Number(refAreaRight),
       "impression",
       50
     );
@@ -152,11 +167,11 @@ export default class App extends Component {
           height={400}
           data={data}
           onMouseDown={(e) =>
-            this.setState({ refAreaLeft: e.activeLabel })
+            this.setState({ refAreaLeft: e.activeLabel ?? '' })
           }
           onMouseMove={(e) =>
             this.state.refAreaLeft &&
-            this.setState({ refAreaRight: e.activeLabel })
+            this.setState({ refAreaRight: e.activeLabel ?? ''})
           }
           // eslint-disable-next-line react/jsx-no-bind
           onMouseUp={this.zoom.bind(this)}

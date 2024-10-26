@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, FC } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -13,14 +13,25 @@ import {
   Button
 } from '@mui/material';
 
-const excelNumberToDate = (excelNumber) => {
+const excelNumberToDate = (excelNumber: number) => {
   const startDate = new Date(1900, 0, 1);
   const daysOffset = excelNumber - 2;
   const resultDate = new Date(startDate.setDate(startDate.getDate() + daysOffset));
   return resultDate;
 }
 
-const TransactionTable = ({ transactions }) => {
+interface Transaction {
+  operazione: string;
+  importo: number;
+  data: number;
+  [key: string]: string | number;
+}
+
+interface TransactionTableProps {
+  transactions: Transaction[];
+}
+
+const TransactionTable: FC<TransactionTableProps> = ({ transactions }) => {
   const [filters, setFilters] = useState({
     operazione: '',
     importoMin: '',
@@ -39,7 +50,7 @@ const TransactionTable = ({ transactions }) => {
     });
   };
 
-  const handleFilterChange = (event) => {
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFilters(prevFilters => ({
       ...prevFilters,
