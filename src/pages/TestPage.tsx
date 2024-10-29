@@ -9,6 +9,7 @@ import {
   Tooltip,
   ReferenceArea
 } from "recharts";
+import { Box, Button } from "@mui/material";
 
 const initialData = [
   { name: 1, cost: 4.11, impression: 100 },
@@ -153,14 +154,18 @@ export default class App extends Component<{}, AppState> {
     console.log(this.state);
 
     return (
-      <div className="highlight-bar-charts" style={{ userSelect: "none" }}>
-        <button
-          type="button"
-          className="btn update"
-          onClick={this.zoomOut.bind(this)}
-        >
-          Zoom Out
-        </button>
+      <Box className="highlight-bar-charts dataCard" sx={{ userSelect: "none", padding: 2 }}>
+        <Box sx={{ padding: 2 }}>
+          <Button
+            variant="contained"
+            className="btn update"
+            size="small"
+            color="secondary"
+            onClick={this.zoomOut.bind(this)}
+          >
+            Zoom Out
+          </Button>
+        </Box>
 
         <LineChart
           width={800}
@@ -171,7 +176,7 @@ export default class App extends Component<{}, AppState> {
           }
           onMouseMove={(e) =>
             this.state.refAreaLeft &&
-            this.setState({ refAreaRight: e.activeLabel ?? ''})
+            this.setState({ refAreaRight: e.activeLabel ?? '' })
           }
           // eslint-disable-next-line react/jsx-no-bind
           onMouseUp={this.zoom.bind(this)}
@@ -221,7 +226,7 @@ export default class App extends Component<{}, AppState> {
             />
           ) : null}
         </LineChart>
-      </div>
+      </Box>
     );
   }
 }
