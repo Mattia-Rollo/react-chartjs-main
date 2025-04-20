@@ -1,4 +1,4 @@
-import React, { FC, lazy, Suspense, useState } from "react";
+import React, { FC, lazy, Suspense, useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   Box, 
@@ -28,7 +28,6 @@ import {
   Equalizer as ChartJsIcon,
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
-// import { LoadingFallback } from './components/LoadingComponent';
 import "./App.css";
 
 // Lazy loading components with delay
@@ -36,13 +35,13 @@ const Dashboard = lazy<React.FC>(() =>
   new Promise(resolve =>
     setTimeout(() =>
       import('./components/Dashboard').then((module) => resolve({ default: module.default })),
-      2000
+      500
     )
   )
 );
 const FlightDataChart = lazy(() => import('./components/FlightDataChart'));
 const SpeseMensiliDashboard = lazy(async () => {
-  await new Promise(resolve => setTimeout(resolve, 500)); // Ridotto il timeout
+  await new Promise(resolve => setTimeout(resolve, 500));
   return import('./components/DashboardBank');
 });
 const TestPage = lazy(() => import('./pages/TestPage'));
@@ -74,7 +73,7 @@ const Navigation: FC<{ open: boolean; handleDrawerToggle: () => void }> = ({ ope
     <Drawer
       variant="permanent"
       sx={{
-        width: drawerWidth,
+        width: open ? drawerWidth : theme.spacing(9),
         flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
@@ -167,6 +166,18 @@ const Navigation: FC<{ open: boolean; handleDrawerToggle: () => void }> = ({ ope
   );
 };
 
+// Dynamic Title Component
+const DynamicTitle: FC = () => {
+  const location = useLocation();
+  const currentNavItem = navItems.find(item => item.path === location.pathname);
+  
+  return (
+    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+      {currentNavItem ? currentNavItem.label : "Dashboard App"}
+    </Typography>
+  );
+};
+
 // Main layout component
 export const App: FC = () => {
   const [open, setOpen] = useState(true);
@@ -174,7 +185,7 @@ export const App: FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Automatically close drawer on mobile - correzione con useEffect
-  React.useEffect(() => {
+  useEffect(() => {
     if (isMobile) {
       setOpen(false);
     }
@@ -194,17 +205,11 @@ export const App: FC = () => {
           position="fixed" 
           sx={{ 
             zIndex: theme.zIndex.drawer + 1,
+            width: open ? `calc(100% - ${drawerWidth}px)` : '100%',
+            marginLeft: open ? drawerWidth : 0,
             transition: theme.transitions.create(['width', 'margin'], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
-            }),
-            ...(open && {
-              marginLeft: drawerWidth,
-              width: `calc(100% - ${drawerWidth}px)`,
-              transition: theme.transitions.create(['width', 'margin'], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
             }),
           }}
         >
@@ -218,30 +223,41 @@ export const App: FC = () => {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Dashboard App
-            </Typography>
+            <DynamicTitle />
           </Toolbar>
         </AppBar>
         
         {/* Sidebar Navigation */}
         <Navigation open={open} handleDrawerToggle={handleDrawerToggle} />
         
-        {/* Main Content */}
+        {/* Main Content - Area elastica */}
         <Box 
           component="main" 
           sx={{ 
             flexGrow: 1, 
             p: 3, 
-            width: '100%',
+            width: open ? `calc(100% - ${drawerWidth}px)` : '80%',
+            // marginLeft: open ? 0 : `-${theme.spacing(7)}`,
+            // [theme.breakpoints.up('sm')]: {
+            //   marginLeft: open ? 0 : `-${theme.spacing(9)}`,
+            // },
             marginTop: '64px',
-            transition: theme.transitions.create('margin', {
+            transition: theme.transitions.create(['width', 'margin', 'margin-left'], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
           }}
         >
-          <Container maxWidth="xl" sx={{ mt: 2 }}>
+          <Container 
+            maxWidth="xl" 
+            sx={{ 
+              mt: 2,
+              transition: theme.transitions.create('all', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+            }}
+          >
             <Suspense fallback={<InvisibleFallback />}>
               <Routes>
                 <Route path="/" element={
@@ -307,3 +323,24 @@ export const App: FC = () => {
     </Router>
   );
 };
+
+/* CSS da aggiungere al tuo App.css */
+/*
+.dataCard {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dataCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+.container-transition {
+  transition: all 0.3s ease;
+}
+*/

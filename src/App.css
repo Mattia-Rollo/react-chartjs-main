@@ -12,13 +12,13 @@
   padding: 2rem 0 2rem 0; */
 }
 
-.dataCard {
+/* .dataCard {
   background-color: #efefef;
   border-radius: 0.5em;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
   padding: 1em;
   margin-top: 1em;
-}
+} */
 
 .revenueCard {
   width: 92%;
@@ -61,7 +61,6 @@
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
-body {
-  margin: 0;
-  background-color: #f5f7fa;
+.container-transition {
+  transition: all 0.3s ease;
 }
