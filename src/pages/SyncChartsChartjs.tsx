@@ -66,7 +66,7 @@ const TVMChart: React.FC<{
     onZoom?: (min: number | string, max: number | string) => void;
     onSetRef?: (chart: Chart) => void;
 }> = ({
-    id,
+    // id,
     title,
     subtitle,
     color,

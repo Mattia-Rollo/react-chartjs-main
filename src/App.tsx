@@ -28,7 +28,7 @@ import {
   Equalizer as ChartJsIcon,
   ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
-import { LoadingFallback } from './components/LoadingComponent';
+// import { LoadingFallback } from './components/LoadingComponent';
 import "./App.css";
 
 // Lazy loading components with delay
@@ -66,7 +66,7 @@ const navItems = [
 const InvisibleFallback = () => <div style={{ display: 'none' }}></div>;
 
 // Navigation component
-const Navigation = ({ open, handleDrawerToggle }) => {
+const Navigation: FC<{ open: boolean; handleDrawerToggle: () => void }> = ({ open, handleDrawerToggle }) => {
   const location = useLocation();
   const theme = useTheme();
   
