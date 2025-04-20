@@ -31,6 +31,7 @@ const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ dataGraficoLi
         console.log("Struttura del primo elemento:", primoElemento);
 
         let stipendioCorrente = stipendioIniziale;
+
         const datiConStipendio = dataGraficoLineare.map((item, index) => {
             let importo = 0;
             if (typeof item.importo === 'number') {
@@ -62,6 +63,11 @@ const GraficoSpeseSalario: React.FC<GraficoSpeseSalarioProps> = ({ dataGraficoLi
         console.log("Dati elaborati:", datiConStipendio);
         setDatiCompleti(datiConStipendio);
     }, [dataGraficoLineare, stipendioIniziale]);
+
+    useEffect(() => {
+        console.log("Grafico stipendio e spese linea:", datiCompleti);
+    }
+    , [datiCompleti]);
 
     if (!Array.isArray(datiCompleti) || datiCompleti.length === 0) {
         return <Typography>Nessun dato disponibile per il grafico</Typography>;
