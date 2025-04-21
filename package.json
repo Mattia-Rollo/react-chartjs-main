@@ -28,6 +28,7 @@
     "react-router-dom": "^6.22.1",
     "recharts": "^2.12.0",
     "uplot": "^1.6.5",
+    "uplot-react": "^1.2.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

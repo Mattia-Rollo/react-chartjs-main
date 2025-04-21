@@ -78,7 +78,7 @@ const TVMChart: React.FC<{
     onSetRef
 }) => {
 
-        const chartRef = useRef<ChartJS<'line'> | null>(null);
+        const chartRef = useRef<Chart<'line'>>(null);
 
         // Formatta le ore di volo (HHHH:MM:SS)
         const formatFlightHours = (seconds: number): string => {
@@ -221,10 +221,10 @@ const TVMChart: React.FC<{
                         }
                     },
                     zoom: {
-                        // pan: {
-                        //     enabled: true,
-                        //     mode: 'x',
-                        // },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
                         zoom: {
                             drag: {
                                 enabled: true
