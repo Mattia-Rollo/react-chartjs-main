@@ -110,9 +110,12 @@ const TVMChart: React.FC<{
   const plotInstance = useRef<uPlot | null>(null);
   
   // Trasforma i dati per uPlot
-  const transformData = () => {
+  const transformData = (): uPlot.AlignedData => {
     if (!data || data.length === 0) {
-      return [[0], [0]]; // Dati vuoti di default
+      return [
+        [0], // x values
+        [0]  // y values
+      ] as uPlot.AlignedData; // Explicitly cast to uPlot.AlignedData
     }
     
     // uPlot richiede dati in serie di colonne [x, y1, y2, ...]
@@ -130,7 +133,7 @@ const TVMChart: React.FC<{
       amplitudes.push(point.amplitude);
     });
     
-    return [timestamps, amplitudes];
+    return [timestamps, amplitudes] as uPlot.AlignedData;
   };
   
   // Configurazione per l'asse X in base al tipo
@@ -154,10 +157,10 @@ const TVMChart: React.FC<{
           stroke: "#eee",
           width: 1
         },
-        values: (u: uPlot, vals: number[]) => vals.map(v => {
+        values: (_u: uPlot, vals: number[]) => vals.map(v => { 
           const date = new Date(v);
           return date.toLocaleDateString() + ' ' + 
-                 date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+             date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         })
       };
     } else if (xAxisType === 'flightHoursCategory') {
@@ -179,7 +182,7 @@ const TVMChart: React.FC<{
           stroke: "#eee",
           width: 1
         },
-        values: (u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
+        values: (_u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
       };
     } else {
       return {
@@ -200,7 +203,7 @@ const TVMChart: React.FC<{
           stroke: "#eee",
           width: 1
         },
-        values: (u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
+        values: (_u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
       };
     }
   };
@@ -262,7 +265,7 @@ const TVMChart: React.FC<{
             stroke: "#eee",
             width: 1
           },
-          values: (u: uPlot, vals: number[]) => vals.map(formatAmplitude)
+          values: (_u: uPlot, vals: number[]) => vals.map(formatAmplitude)
         }
       ],
       plugins: [
@@ -378,7 +381,7 @@ const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({
   sensorData2 = [],
   xAxisType = 'datetime',
   height = 250,
-  showMarkers = false
+  // showMarkers = false
 }) => {
   // Stato per la sincronizzazione
   const [syncEnabled, setSyncEnabled] = useState(false);

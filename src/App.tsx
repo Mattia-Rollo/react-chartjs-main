@@ -59,7 +59,7 @@ const navItems = [
   { path: "/bank-dashboard", label: "Bank Dashboard", icon: <BankIcon /> },
   { path: "/test-chart", label: "TEST Chart", icon: <ChartIcon /> },
   { path: "/sync-apexcharts", label: "Sync ApexCharts", icon: <SyncIcon /> },
-  { path: "/sync-chartjs", label: "Sync ChartJS", icon: <ChartIcon /> },
+  { path: "/sync-chartjs", label: "Sync ChartJS", icon: <ChartJsIcon /> },
   { path: "/sync-uplot", label: "Sync uPlot", icon: <ChartIcon /> },
 ];
 
