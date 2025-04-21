@@ -47,6 +47,7 @@ const SpeseMensiliDashboard = lazy(async () => {
 const TestPage = lazy(() => import('./pages/TestPage'));
 const SyncChartsApexcharts = lazy(() => import('./pages/SyncChartsApexcharts'));
 const SyncChartsChartjs = lazy(() => import('./pages/SyncChartsChartjs'));
+const SyncChartsuPlot = lazy(() => import('./pages/SyncChartsuPlot'));
 
 // Sidebar width
 const drawerWidth = 240;
@@ -58,7 +59,8 @@ const navItems = [
   { path: "/bank-dashboard", label: "Bank Dashboard", icon: <BankIcon /> },
   { path: "/test-chart", label: "TEST Chart", icon: <ChartIcon /> },
   { path: "/sync-apexcharts", label: "Sync ApexCharts", icon: <SyncIcon /> },
-  { path: "/sync-chartjs", label: "Sync ChartJS", icon: <ChartJsIcon /> },
+  { path: "/sync-chartjs", label: "Sync ChartJS", icon: <ChartIcon /> },
+  { path: "/sync-uplot", label: "Sync uPlot", icon: <ChartIcon /> },
 ];
 
 // Un fallback invisibile per Suspense
@@ -180,7 +182,7 @@ const DynamicTitle: FC = () => {
 
 // Main layout component
 export const App: FC = () => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -311,6 +313,16 @@ export const App: FC = () => {
                     <Fade in={true} timeout={500}>
                       <div className="sync-chartjs">
                         <SyncChartsChartjs />
+                      </div>
+                    </Fade>
+                  }
+                />
+                <Route
+                  path="/sync-uplot"
+                  element={
+                    <Fade in={true} timeout={500}>
+                      <div className="/sync-uplot">
+                        <SyncChartsuPlot />
                       </div>
                     </Fade>
                   }
