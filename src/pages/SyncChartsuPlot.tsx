@@ -18,36 +18,118 @@ interface TVMChartsProps {
   showMarkers?: boolean;
 }
 
-// Classe per gestire la sincronizzazione tra grafici
-class ChartSynchronizer {
+// ********* SYNC CURSOR IMPLEMENTATION *********
+
+/**
+ * Classe SyncManager per gestire la sincronizzazione tra grafici
+ * 
+ * Questa classe è responsabile di:
+ * 1. Gestire un registro di tutti i grafici da sincronizzare
+ * 2. Fornire metodi per abilitare/disabilitare la sincronizzazione
+ * 3. Sincronizzare eventi del cursore tra i grafici
+ * 4. Sincronizzare lo zoom tra i grafici
+ */
+class SyncManager {
+  // Chiave univoca per identificare questo gruppo di sincronizzazione
+  private key: string;
+  
+  // Mappa per memorizzare tutti i grafici sincronizzati: ID -> istanza uPlot
   private charts: Map<string, uPlot> = new Map();
-  private isSyncEnabled: boolean = false;
   
-  // Imposta lo stato di sincronizzazione
-  setSyncEnabled(enabled: boolean) {
-    this.isSyncEnabled = enabled;
+  // Flag per abilitare/disabilitare la sincronizzazione globalmente
+  private enabled: boolean = true;
+  
+  /**
+   * Costruttore che accetta una chiave univoca per il gruppo di sincronizzazione
+   * 
+   * @param key - Identificatore univoco per questo gruppo di sincronizzazione
+   */
+  constructor(key: string) {
+    this.key = key;
   }
   
-  // Ottieni lo stato di sincronizzazione
-  getSyncEnabled(): boolean {
-    return this.isSyncEnabled;
+  /**
+   * Restituisce la chiave di sincronizzazione
+   * Questa chiave viene utilizzata dalle opzioni di uPlot per identificare
+   * quali grafici appartengono allo stesso gruppo di sincronizzazione
+   */
+  getKey(): string {
+    return this.key;
   }
   
-  // Registra un grafico
-  registerChart(id: string, chart: uPlot) {
-    this.charts.set(id, chart);
-    return () => {
-      this.charts.delete(id);
+  /**
+   * Abilita o disabilita la sincronizzazione per tutti i grafici
+   * 
+   * @param enabled - true per abilitare, false per disabilitare
+   */
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+  }
+  
+  /**
+   * Verifica se la sincronizzazione è attualmente abilitata
+   */
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+  
+  /**
+   * Registra un grafico per la sincronizzazione
+   * 
+   * @param chart - Istanza uPlot da aggiungere al gruppo di sincronizzazione
+   */
+  sub(chart: uPlot): void {
+    // Usa l'ID del grafico se disponibile, altrimenti genera un ID casuale
+    this.charts.set(chart.id || Math.random().toString(36).substring(2, 9), chart);
+  }
+  
+  /**
+   * Rimuove un grafico dalla sincronizzazione
+   * Importante per evitare memory leak quando un grafico viene distrutto
+   * 
+   * @param chart - Istanza uPlot da rimuovere dal gruppo di sincronizzazione
+   */
+  unsub(chart: uPlot): void {
+    this.charts.forEach((value, key) => {
+      if (value === chart) {
+        this.charts.delete(key);
+      }
+    });
+  }
+  
+  /**
+   * Crea una funzione di filtro per gli eventi di sincronizzazione
+   * Consente di controllare quali tipi di eventi vengono sincronizzati
+   * 
+   * @param syncMouseUpDown - Se true, sincronizza anche eventi mouseup/mousedown
+   * @returns Una funzione che determina se un tipo di evento deve essere sincronizzato
+   */
+  createFilter(syncMouseUpDown: boolean = true) {
+    return (type: string) => {
+      // Se syncMouseUpDown è true, sincronizza tutti gli eventi
+      // Altrimenti, sincronizza tutti tranne mouseup e mousedown
+      return syncMouseUpDown || (type !== "mouseup" && type !== "mousedown");
     };
   }
   
-  // Sincronizza lo zoom tra i grafici
+  /**
+   * Sincronizza lo zoom tra tutti i grafici quando uno viene zoomato
+   * 
+   * @param sourceId - ID del grafico che ha originato l'evento zoom
+   * @param minX - Nuovo valore minimo dell'asse X
+   * @param maxX - Nuovo valore massimo dell'asse X
+   */
   syncZoom(sourceId: string, minX: number, maxX: number) {
-    if (!this.isSyncEnabled) return;
+    // Non fare nulla se la sincronizzazione è disabilitata
+    if (!this.enabled) return;
     
+    // Itera su tutti i grafici registrati
     this.charts.forEach((chart, id) => {
+      // Applica lo zoom solo agli altri grafici (non a quello che ha originato lo zoom)
       if (id !== sourceId) {
+        // Usa batch() per raggruppare le operazioni e migliorare le performance
         chart.batch(() => {
+          // Imposta la nuova scala X con i valori min/max
           chart.setScale('x', {
             min: minX,
             max: maxX
@@ -57,11 +139,16 @@ class ChartSynchronizer {
     });
   }
   
-  // Resetta lo zoom di tutti i grafici
+  /**
+   * Resetta lo zoom di tutti i grafici al range completo dei dati
+   * Utile per un pulsante "Reset Zoom" globale
+   */
   resetAllZoom() {
     this.charts.forEach(chart => {
+      // Verifica che ci siano dati nel grafico
       if (chart.data[0].length > 0) {
         chart.batch(() => {
+          // Imposta la scala X al range completo dei dati (dal primo all'ultimo punto)
           chart.setScale('x', {
             min: chart.data[0][0],
             max: chart.data[0][chart.data[0].length - 1]
@@ -72,8 +159,81 @@ class ChartSynchronizer {
   }
 }
 
+/**
+ * Funzione che confronta le chiavi di scala tra due grafici
+ * Usata per determinare se due assi corrispondono tra loro
+ * 
+ * @param own - Chiave di scala del grafico corrente
+ * @param ext - Chiave di scala del grafico esterno
+ * @returns true se le chiavi corrispondono, false altrimenti
+ */
+const matchSyncKeys = (own: string, ext: string) => own === ext;
+
+/**
+ * Funzione che fa corrispondere le serie in base alle etichette anziché alla posizione
+ * Questo è cruciale quando i grafici hanno serie in ordine diverso o un numero diverso di serie
+ * 
+ * @param sub - Grafico che riceve l'evento (subscriber)
+ * @param pub - Grafico che origina l'evento (publisher)
+ * @param pubSeriesIdx - Indice della serie nel grafico publisher
+ * @returns L'indice corrispondente nel grafico subscriber o null se non trovato
+ */
+const matchSeriesIdxs = (sub: uPlot, pub: uPlot, pubSeriesIdx: number | null) => {
+  // Se non c'è una serie selezionata, restituisci null
+  if (pubSeriesIdx == null) return null;
+
+  // Ottieni l'etichetta della serie dal grafico publisher
+  const pubSeriesLabel = pub.series[pubSeriesIdx].label;
+  
+  // Trova l'indice della serie con la stessa etichetta nel grafico subscriber
+  return sub.series.findIndex(s => s.label === pubSeriesLabel);
+};
+
+/**
+ * Funzione factory che crea le opzioni di configurazione per il cursore sincronizzato
+ * Questa funzione encapsula tutte le impostazioni necessarie per sincronizzare i cursori
+ * 
+ * @param syncManager - Istanza del SyncManager per ottenere la chiave e il filtro
+ * @param syncMouseUpDown - Se true, sincronizza anche eventi mouseup/mousedown
+ * @returns Oggetto di configurazione per l'opzione cursor di uPlot
+ */
+const createSyncCursorOptions = (syncManager: SyncManager, syncMouseUpDown: boolean = true) => {
+  return {
+    // Blocca il cursore sull'asse X per seguire meglio i dati
+    lock: true,
+    
+    // Impostazioni per la messa a fuoco delle serie
+    focus: {
+      // Distanza in pixel entro la quale una serie viene messa a fuoco
+      prox: 16,
+    },
+    
+    // Configurazione della sincronizzazione
+    sync: {
+      // Chiave per identificare quali grafici sincronizzare insieme
+      key: syncManager.getKey(),
+      
+      // Se true, sincronizza anche la serie selezionata/evidenziata
+      setSeries: true,
+      
+      // Funzioni di corrispondenza per:
+      // 1. Scale dell'asse X
+      // 2. Scale dell'asse Y
+      // 3. Indici delle serie (usando le etichette anziché le posizioni)
+      match: [matchSyncKeys, matchSyncKeys, matchSeriesIdxs],
+      
+      // Filtri per controllare quali eventi vengono pubblicati agli altri grafici
+      filters: {
+        pub: syncManager.createFilter(syncMouseUpDown),
+      }
+    },
+  };
+};
+
 // Crea un'istanza globale del sincronizzatore
-const globalSynchronizer = new ChartSynchronizer();
+const globalSyncManager = new SyncManager("tvm-sync");
+
+// ********* END SYNC CURSOR IMPLEMENTATION *********
 
 // Funzioni di utilità (riutilizzate dal componente originale)
 // Formatta le ore di volo (HHHH:MM:SS)
@@ -104,8 +264,9 @@ const TVMChart: React.FC<{
   data: TVMData[];
   xAxisType: 'datetime' | 'flightHours' | 'flightHoursCategory';
   height: number;
-  synchronizer: ChartSynchronizer;
-}> = ({ id, title, subtitle, color, data, xAxisType, height, synchronizer }) => {
+  syncManager: SyncManager;
+  syncMouseUpDown: boolean;
+}> = ({ id, title, subtitle, color, data, xAxisType, height, syncManager, syncMouseUpDown }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const plotInstance = useRef<uPlot | null>(null);
   
@@ -115,7 +276,7 @@ const TVMChart: React.FC<{
       return [
         [0], // x values
         [0]  // y values
-      ] as uPlot.AlignedData; // Explicitly cast to uPlot.AlignedData
+      ] as uPlot.AlignedData;
     }
     
     // uPlot richiede dati in serie di colonne [x, y1, y2, ...]
@@ -140,10 +301,16 @@ const TVMChart: React.FC<{
   const getXAxisConfig = () => {
     if (xAxisType === 'datetime') {
       return {
+        border: {
+          show: true,      // Mostra il bordo
+          stroke: "#808080", // Colore del bordo
+          width: 1        // Spessore del bordo
+        },
         space: 60,
-        size: 50,
+        size: 10,
         label: "Data e Ora",
-        labelSize: 20,
+        labelSize: 60,
+        gap: 15, 
         labelFont: "12px Arial",
         font: "12px Arial",
         stroke: "#808080",
@@ -157,39 +324,45 @@ const TVMChart: React.FC<{
           stroke: "#eee",
           width: 1
         },
-        values: (_u: uPlot, vals: number[]) => vals.map(v => { 
-          const date = new Date(v);
-          return date.toLocaleDateString() + ' ' + 
-             date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        })
-      };
-    } else if (xAxisType === 'flightHoursCategory') {
-      return {
-        space: 60,
-        size: 50,
-        label: "Ore di Volo",
-        labelSize: 20,
-        labelFont: "12px Arial",
-        font: "12px Arial",
-        stroke: "#808080",
-        grid: {
-          show: true,
-          stroke: "#eee",
-          width: 1
-        },
-        ticks: {
-          show: true,
-          stroke: "#eee",
-          width: 1
-        },
-        values: (_u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
+        values: (_u: uPlot, vals: number[], space: number) => {
+          // Se lo spazio è molto limitato, riduci il numero di etichette mostrate
+          const density = vals.length / 100;
+          
+          // Se la densità è alta, mostra solo alcune etichette
+          if (density > 0.2) {
+            // Mostra circa un'etichetta ogni X valori basandosi sulla densità
+            const skipFactor = Math.ceil(density * 1000);
+            
+            return vals.map((v, i) => {
+              if (i % skipFactor !== 0) return null;
+              
+              const date = new Date(v);
+              // Formato più compatto per le date
+              return date.toLocaleDateString() + '\n' + 
+                    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            });
+          }
+          
+          // Altrimenti mostra tutte le etichette con un formato standard
+          return vals.map(v => { 
+            const date = new Date(v);
+            return date.toLocaleDateString() + '\n' + 
+                  date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          });
+        }
       };
     } else {
       return {
+        border: {
+          show: true,      // Mostra il bordo
+          stroke: "#808080", // Colore del bordo
+          width: 1        // Spessore del bordo
+        },
         space: 60,
         size: 50,
         label: "Ore di Volo",
         labelSize: 20,
+        gap: 10,
         labelFont: "12px Arial",
         font: "12px Arial",
         stroke: "#808080",
@@ -201,7 +374,7 @@ const TVMChart: React.FC<{
         ticks: {
           show: true,
           stroke: "#eee",
-          width: 1
+          width: 500
         },
         values: (_u: uPlot, vals: number[]) => vals.map(v => formatFlightHours(v))
       };
@@ -210,86 +383,108 @@ const TVMChart: React.FC<{
 
   // Inizializza il grafico
   useLayoutEffect(() => {
+    // Non procedere se l'elemento DOM non è stato ancora renderizzato
     if (!chartRef.current) return;
     
+    // Trasforma i dati nel formato richiesto da uPlot
     const plotData = transformData();
     
-    // Configurazione opzioni per uPlot
+    // Configurazione completa delle opzioni per uPlot
     const options: uPlot.Options = {
+      // Dimensioni del grafico (larghezza basata sul contenitore)
       width: chartRef.current.clientWidth || 800,
       height: height,
-      title: "", // Usiamo il titolo manuale
+      
+      // Usiamo un titolo vuoto perché lo gestiamo manualmente nell'UI
+      title: "", 
+      
+      // ID univoco per identificare questo grafico nel SyncManager
       id,
-      cursor: {
-        show: true,
-        points: {
-          show: false  // Disabilitiamo i punti del cursore per evitare problemi
-        }
-      },
+      
+      // Configurazione del cursore con sincronizzazione
+      // Qui è dove avviene la magia della sincronizzazione!
+      cursor: createSyncCursorOptions(syncManager, syncMouseUpDown),
+      
+      // Configurazione della selezione per lo zoom
       select: {
-        show: true,
-        left: 0,
+        show: true,     // Abilita la selezione per lo zoom
+        left: 0,        // Posizione iniziale (verrà aggiornata durante l'uso)
         top: 0,
-        width: 0,
+        width: 0,       // Dimensione iniziale (verrà aggiornata durante l'uso)
         height: 0
       },
+      
+      // Definizione delle serie di dati
       series: [
-        {}, // Serie X (timestamp o ore di volo)
+        {}, // Serie X (timestamp o ore di volo) - sempre vuota in uPlot
         {
-          label: title,
-          stroke: color,
-          width: 3,
+          label: title,    // Etichetta della serie (usata per la corrispondenza tra grafici)
+          stroke: color,   // Colore della linea
+          width: 1,        // Spessore della linea
           points: {
-            show: false,
+            show: false,   // Non mostrare punti singoli sulla linea
           }
         }
       ],
+      
+      // Configurazione degli assi
       axes: [
+        // Asse X - configurazione basata sul tipo scelto (datetime/flightHours)
         getXAxisConfig(),
+        
+        // Asse Y - configurazione per l'ampiezza
         {
-          scale: "y",
-          space: 50,
-          size: 40,
-          label: "Amplitude (g)",
-          labelSize: 20,
+          scale: "y",           // Nome della scala
+          space: 60,            // Spazio attorno all'asse
+          size: 40,             // Dimensione dell'asse
+          label: "Amplitude (g)",// Etichetta dell'asse
+          labelSize: 20,        // Dimensione dell'etichetta
           labelFont: "12px Arial",
           font: "12px Arial",
-          stroke: "#808080",
+          stroke: "#808080",    // Colore dell'asse
           grid: {
-            show: true,
-            stroke: "#eee",
-            width: 1
+            show: true,         // Mostra la griglia
+            stroke: "#eee",     // Colore della griglia
+            width: 1            // Spessore delle linee della griglia
           },
           ticks: {
-            show: true,
+            show: false,         // Mostra i tick
             stroke: "#eee",
             width: 1
           },
+          // Formattazione dei valori sull'asse Y
           values: (_u: uPlot, vals: number[]) => vals.map(formatAmplitude)
         }
       ],
+      
+      // Plugin personalizzati per funzionalità aggiuntive
       plugins: [
         {
           hooks: {
-            // Hook per lo zoom quando l'utente seleziona un'area
+            // Hook che viene chiamato quando l'utente completa una selezione (per lo zoom)
             setSelect: (u: uPlot) => {
               const { left, width } = u.select;
               
+              // Procedi solo se c'è effettivamente una selezione
               if (width > 0) {
+                // Converti le posizioni dei pixel in valori dei dati
                 const minX = u.posToVal(left, 'x');
                 const maxX = u.posToVal(left + width, 'x');
                 
+                // Usa batch() per raggruppare operazioni e migliorare le performance
                 u.batch(() => {
+                  // Aggiorna la scala X per effettuare lo zoom
                   u.setScale("x", {
                     min: minX,
                     max: maxX
                   });
                 });
                 
-                // Sincronizza lo zoom con altri grafici
-                synchronizer.syncZoom(id, minX, maxX);
+                // Sincronizza lo zoom con gli altri grafici tramite il SyncManager
+                // Questo è cruciale: fa sì che tutti i grafici zoomino insieme
+                syncManager.syncZoom(id, minX, maxX);
                 
-                // Reset della selezione
+                // Reset della selezione dopo aver applicato lo zoom
                 u.setSelect({
                   left: 0,
                   top: 0,
@@ -317,7 +512,7 @@ const TVMChart: React.FC<{
           plotInstance.current = new uPlot(options, plotData, chartRef.current);
           
           // Registra il grafico nel sincronizzatore
-          synchronizer.registerChart(id, plotInstance.current);
+          syncManager.sub(plotInstance.current);
           
           console.log(`Grafico ${id} creato con successo`);
         }
@@ -330,6 +525,8 @@ const TVMChart: React.FC<{
     return () => {
       if (plotInstance.current) {
         try {
+          // Rimuovi il grafico dal sincronizzatore
+          syncManager.unsub(plotInstance.current);
           plotInstance.current.destroy();
         } catch (error) {
           console.error('Errore durante la distruzione del grafico:', error);
@@ -337,7 +534,7 @@ const TVMChart: React.FC<{
         plotInstance.current = null;
       }
     };
-  }, [data, xAxisType, height, title, subtitle, color, id, synchronizer]);
+  }, [data, xAxisType, height, title, subtitle, color, id, syncManager, syncMouseUpDown]);
   
   // Funzione per resettare lo zoom
   const resetZoom = () => {
@@ -375,34 +572,51 @@ const TVMChart: React.FC<{
   );
 };
 
-// Componente per grafici sincronizzati
+/**
+ * Componente principale che gestisce i grafici sincronizzati
+ * Questo componente:
+ * 1. Gestisce i controlli per la sincronizzazione
+ * 2. Renderizza più istanze del componente TVMChart
+ * 3. Coordina la sincronizzazione tra i grafici
+ */
 const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({ 
   sensorData1 = [], 
   sensorData2 = [],
   xAxisType = 'datetime',
-  height = 250,
-  // showMarkers = false
+  height = 350,
 }) => {
-  // Stato per la sincronizzazione
-  const [syncEnabled, setSyncEnabled] = useState(false);
+  // Stati per controllare le opzioni di sincronizzazione
+  // - syncEnabled: attiva/disattiva tutta la sincronizzazione
+  // - syncMouseUpDown: attiva/disattiva la sincronizzazione degli eventi mouseup/down
+  const [syncEnabled, setSyncEnabled] = useState(true);
+  const [syncMouseUpDown, setSyncMouseUpDown] = useState(true);
   
-  // Aggiorna lo stato di sincronizzazione nel sincronizzatore globale
+  /**
+   * Effect hook che aggiorna lo stato di sincronizzazione nel SyncManager
+   * quando l'utente cambia l'impostazione di sincronizzazione nell'UI
+   */
   useEffect(() => {
-    globalSynchronizer.setSyncEnabled(syncEnabled);
-  }, [syncEnabled]);
+    // Aggiorna lo stato nel SyncManager per rifletterlo in tutti i grafici
+    globalSyncManager.setEnabled(syncEnabled);
+  }, [syncEnabled]); // Si attiva solo quando syncEnabled cambia
   
-  // Funzione per resettare lo zoom di tutti i grafici
+  /**
+   * Funzione che resetta lo zoom di tutti i grafici
+   * Chiamata quando l'utente preme il pulsante "Reset Zoom (tutti i grafici)"
+   */
   const resetAllZoom = () => {
-    globalSynchronizer.resetAllZoom();
+    globalSyncManager.resetAllZoom();
   };
   
-  // Formatta il tipo di visualizzazione per il display
+  /**
+   * Funzione helper che formatta il tipo di asse X per la visualizzazione nell'UI
+   * Converte i valori tecnici in etichette leggibili dall'utente
+   */
   const getDisplayAxisType = () => {
     switch(xAxisType) {
       case 'datetime':
         return 'Data e Ora';
       case 'flightHours':
-        return 'Ore di Volo (Numeriche)';
       case 'flightHoursCategory':
         return 'Ore di Volo (HHHH:MM:SS)';
       default:
@@ -415,7 +629,7 @@ const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({
       <div className="mb-4" style={{ background: '#f9f9f9', padding: '15px', borderRadius: '6px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <div>
-            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '10px' }}>
               <input 
                 type="checkbox" 
                 checked={syncEnabled} 
@@ -424,10 +638,21 @@ const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({
               />
               <span style={{ fontWeight: 'bold' }}>Sincronizza Zoom</span>
             </label>
+            
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={syncMouseUpDown} 
+                onChange={e => setSyncMouseUpDown(e.target.checked)} 
+                style={{ marginRight: '8px' }}
+              />
+              <span style={{ fontWeight: 'bold' }}>Sincronizza eventi mouseup/down</span>
+            </label>
+            
             <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
               {syncEnabled ? 
-                "Lo zoom sarà sincronizzato tra i grafici" : 
-                "Ogni grafico avrà uno zoom indipendente"}
+                "La sincronizzazione è attiva tra i grafici" : 
+                "Ogni grafico è indipendente"}
             </div>
           </div>
           
@@ -461,7 +686,8 @@ const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({
           data={sensorData1}
           xAxisType={xAxisType}
           height={height}
-          synchronizer={globalSynchronizer}
+          syncManager={globalSyncManager}
+          syncMouseUpDown={syncMouseUpDown}
         />
       </div>
       
@@ -474,7 +700,8 @@ const TVMSynchronizedCharts: React.FC<TVMChartsProps> = ({
           data={sensorData2}
           xAxisType={xAxisType}
           height={height}
-          synchronizer={globalSynchronizer}
+          syncManager={globalSyncManager}
+          syncMouseUpDown={syncMouseUpDown}
         />
       </div>
     </div>
@@ -506,8 +733,8 @@ const TVMChartsDemo: React.FC = () => {
     return data;
   };
   
-  const sampleData1 = generateSampleData(100, 5000);
-  const sampleData2 = generateSampleData(100, 8000);
+  const sampleData1 = generateSampleData(10000, 8000);
+  const sampleData2 = generateSampleData(10000, 8000);
   
   // Tipo di asse X selezionato
   const [xAxisType, setXAxisType] = useState<'datetime' | 'flightHours' | 'flightHoursCategory'>('datetime');
