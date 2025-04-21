@@ -207,7 +207,7 @@ const TVMChart: React.FC<{
           stroke: "#eee",
           width: 1
         },
-        values: (_u: uPlot, vals: number[], space: number) => {
+        values: (_u: uPlot, vals: number[]) => {
           const density = vals.length / 100;
           
           if (density > 0.2) {
