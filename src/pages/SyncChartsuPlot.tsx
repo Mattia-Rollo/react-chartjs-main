@@ -150,10 +150,11 @@ const TVMChart: React.FC<{
   height: number;
   syncManager: SyncManager;
   syncMouseUpDown: boolean;
-  syncEnabled: boolean; // Aggiungiamo questa prop esplicita
+  syncEnabled: boolean;
 }> = ({ id, title, subtitle, color, data, xAxisType, height, syncManager, syncMouseUpDown, syncEnabled }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const plotInstance = useRef<uPlot | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   
   // Trasforma i dati per uPlot
   const transformData = (): uPlot.AlignedData => {
@@ -259,6 +260,14 @@ const TVMChart: React.FC<{
     }
   };
 
+  // Funzione per gestire il ridimensionamento
+  const handleResize = () => {
+    if (chartRef.current && plotInstance.current) {
+      const newWidth = chartRef.current.clientWidth;
+      plotInstance.current.setSize({ width: newWidth, height: height });
+    }
+  };
+
   // Inizializza il grafico
   useLayoutEffect(() => {
     if (!chartRef.current) return;
@@ -337,7 +346,6 @@ const TVMChart: React.FC<{
                 });
                 
                 // Controlla lo stato di sincronizzazione prima di sincronizzare lo zoom
-                // Usiamo la prop syncEnabled passata direttamente al componente
                 if (syncEnabled) {
                   syncManager.syncZoom(id, minX, maxX);
                 }
@@ -365,13 +373,32 @@ const TVMChart: React.FC<{
         if (chartRef.current) {
           plotInstance.current = new uPlot(options, plotData, chartRef.current);
           syncManager.sub(plotInstance.current);
+          
+          // Configurazione ResizeObserver per monitorare le modifiche di dimensione
+          if (resizeObserverRef.current) {
+            resizeObserverRef.current.disconnect();
+          }
+          
+          resizeObserverRef.current = new ResizeObserver(handleResize);
+          resizeObserverRef.current.observe(chartRef.current);
         }
       } catch (error) {
         console.error('Errore durante la creazione del grafico:', error);
       }
     }, 100);
     
+    // Event listener per il resize della finestra come backup
+    window.addEventListener('resize', handleResize);
+    
     return () => {
+      // Pulizia
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+      
+      window.removeEventListener('resize', handleResize);
+      
       if (plotInstance.current) {
         try {
           syncManager.unsub(plotInstance.current);
