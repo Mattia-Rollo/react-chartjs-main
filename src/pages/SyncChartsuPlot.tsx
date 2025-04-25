@@ -594,7 +594,7 @@ const TVMChartsDemo: React.FC = () => {
     return data;
   };
   
-  const sampleData1 = generateSampleData(10000, 8000);
+  const sampleData1 = generateSampleData(20000, 8000);
   const sampleData2 = generateSampleData(10000, 8000);
   
   const [xAxisType, setXAxisType] = useState<'datetime' | 'flightHours' | 'flightHoursCategory'>('datetime');
