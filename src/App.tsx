@@ -29,21 +29,21 @@ import {
 import "./App.css";
 
 // Componenti delle icone personalizzate memorizzate con memo
-const ApexChartsIcon: FC<SvgIconProps> = memo((props) => (
+const ApexChartsIcon = memo((props: SvgIconProps) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
     <path d="M12 2L2 20h20L12 2z" fill="none" stroke="currentColor" strokeWidth="1.5" />
     <path d="M9 16l2-4 2 2 3-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </SvgIcon>
 ));
 
-const ChartJsIcon: FC<SvgIconProps> = memo((props) => (
+const ChartJsIcon = memo((props: SvgIconProps) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
     <path d="M4.15 7.15L12 3l7.85 4.15v8.7L12 20l-7.85-4.15z" fill="none" stroke="currentColor" strokeWidth="1.5" />
     <path d="M6 14c1-1 2-3 3-1s2 2 3 0 2-5 3-2 3 1 3 0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </SvgIcon>
 ));
 
-const UPlotIcon: FC<SvgIconProps> = memo((props) => (
+const UPlotIcon = memo((props: SvgIconProps) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
     <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
     <path d="M4 16l4-6 4 4 4-8 4 3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
